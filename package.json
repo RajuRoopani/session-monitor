@@ -1,0 +1,13 @@
+{
+  "name": "session-monitor",
+  "version": "1.0.0",
+  "description": "Live session buddy for Claude Code. Know if you're steering in the right direction.",
+  "type": "module",
+  "bin": { "session-monitor": "./src/cli.mjs" },
+  "dependencies": { "@anthropic-ai/sdk": "^0.39.0" },
+  "engines": { "node": ">=18.0.0" },
+  "keywords": ["claude-code", "ai-agent", "monitoring", "developer-tools", "session"],
+  "files": ["src/", "hooks/", ".claude/", "install.sh"],
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/RajuRoopani/session-monitor" }
+}
