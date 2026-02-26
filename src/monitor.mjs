@@ -219,7 +219,21 @@ export function reconcileFailures(events) {
 // ── Utilities ─────────────────────────────────────────────────────────────
 
 function extractUserText(entry) {
-  return entry.type === 'user_message' ? entry.text?.slice(0, 500) : null;
+  if (entry.type !== 'user_message') return null;
+  const text = entry.text?.trim();
+  if (!text) return null;
+
+  // Skip messages that look like stack traces or error dumps
+  if (/^(TypeError|Error|ReferenceError|SyntaxError|RangeError)[\s:]/.test(text)) return null;
+  if (/^\s+at\s+\S+\s+\(/.test(text)) return null;           // starts with stack frame
+  if (/file:\/\/.*:\d+\n/.test(text)) return null;            // file URL with line number
+  if (/\n\s+at\s+\S/.test(text)) return null;                 // has stack frames inside
+  if (/^\s*[\`~]{3,}/.test(text)) return null;                // fenced code block paste
+
+  // Skip very short commands ("push it", "commit this", "ok", etc.) — ≤2 words under 20 chars
+  if (text.length < 20 && text.trim().split(/\s+/).length <= 2) return null;
+
+  return text.slice(0, 500);
 }
 
 async function writeGoalSilently(sessionId, goal) {
