@@ -156,15 +156,19 @@ function parseLine(raw) {
   const ts = obj.timestamp ?? new Date().toISOString();
 
   // User message (captures goal + branch points)
-  if (obj.type === 'user' && Array.isArray(obj.message?.content)) {
-    const textBlock = obj.message.content.find(b => b.type === 'text');
-    if (textBlock) {
-      return { type: 'user_message', text: textBlock.text, timestamp: ts };
+  if (obj.type === 'user') {
+    const content = obj.message?.content;
+    // Plain string → human typed message
+    if (typeof content === 'string' && content.trim()) {
+      return { type: 'user_message', text: content, timestamp: ts };
     }
-    // Tool results embedded in user messages
-    const resultBlocks = obj.message.content.filter(b => b.type === 'tool_result');
-    if (resultBlocks.length > 0) {
-      // We'll handle tool result pairing in tail — for now skip these
+    // Array → could be text blocks or tool results
+    if (Array.isArray(content)) {
+      const textBlock = content.find(b => b.type === 'text');
+      if (textBlock) {
+        return { type: 'user_message', text: textBlock.text, timestamp: ts };
+      }
+      // Tool results — skip
       return null;
     }
   }

@@ -153,11 +153,12 @@ async function cmdStatus() {
   }
 
   const { sessionId, transcriptPath, projectSlug } = sessionInfo;
-  const goal = values.goal ?? (await readGoal(sessionId)) ?? '(no goal set)';
 
   // Read transcript
   const { readAll: ra } = await import('./tail.mjs');
   const events = await ra(transcriptPath);
+
+  const goal = values.goal ?? (await readGoal(sessionId)) ?? detectGoalFromEvents(events) ?? '(no goal set)';
 
   // Quick parse for signals
   const toolCallEvents = extractToolCalls(events);
@@ -235,6 +236,23 @@ function scoreToStatus(score) {
   if (score >= 60) return 'HEADS UP';
   if (score >= 40) return 'DRIFTING';
   return 'STUCK';
+}
+
+function detectGoalFromEvents(rawEvents) {
+  for (const obj of rawEvents) {
+    if (obj.type !== 'user') continue;
+    const content = obj.message?.content;
+    const text = (typeof content === 'string' ? content :
+      (Array.isArray(content) ? content.find(b => b.type === 'text')?.text : null))?.trim();
+    if (!text) continue;
+    if (/^(TypeError|Error|ReferenceError|SyntaxError|RangeError)[\s:]/.test(text)) continue;
+    if (/file:\/\/.*:\d+\n/.test(text)) continue;
+    if (/\n\s+at\s+\S/.test(text)) continue;
+    if (/^\s*[`~]{3,}/.test(text)) continue;
+    if (text.length < 20 && text.trim().split(/\s+/).length <= 2) continue;
+    return text.slice(0, 500);
+  }
+  return null;
 }
 
 function extractToolCalls(rawEvents) {
