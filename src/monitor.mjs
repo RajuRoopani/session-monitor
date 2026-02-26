@@ -35,6 +35,20 @@ export async function startMonitor(transcriptPath, sessionId, projectSlug, goalO
     if (parsed) events.push(parsed);
   }
 
+  // Auto-detect goal from existing events if not already set
+  if (!goal) {
+    for (const entry of events) {
+      if (entry.type === 'user_message') {
+        const candidate = extractUserText(entry);
+        if (candidate) {
+          goal = candidate;
+          await writeGoalSilently(sessionId, goal);
+          break;
+        }
+      }
+    }
+  }
+
   // Trigger initial assess if there's something to look at
   if (events.length > 0) {
     await runAssess();
