@@ -144,9 +144,14 @@ export async function startMonitor(transcriptPath, sessionId, projectSlug, goalO
 // ── JSONL line parser ─────────────────────────────────────────────────────
 
 function parseLine(raw) {
-  if (!raw || !raw.trim()) return null;
+  if (!raw) return null;
   let obj;
-  try { obj = JSON.parse(raw); } catch { return null; }
+  if (typeof raw === 'string') {
+    if (!raw.trim()) return null;
+    try { obj = JSON.parse(raw); } catch { return null; }
+  } else {
+    obj = raw;
+  }
 
   const ts = obj.timestamp ?? new Date().toISOString();
 

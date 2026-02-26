@@ -171,6 +171,7 @@ function center(str, width) {
 }
 
 function truncate(str, max) {
+  if (str == null) return '';
   if (str.length <= max) return str;
   return str.slice(0, max - 1) + '…';
 }

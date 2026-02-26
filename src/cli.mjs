@@ -112,7 +112,7 @@ async function cmdStart() {
   };
   process.on('SIGINT',  cleanup);
   process.on('SIGTERM', cleanup);
-  process.on('exit',    () => clearPid(sessionId).catch(() => {}));
+  process.on('exit',    () => { try { clearPid(sessionId); } catch {} });
 }
 
 async function cmdStop() {
@@ -157,11 +157,7 @@ async function cmdStatus() {
 
   // Read transcript
   const { readAll: ra } = await import('./tail.mjs');
-  const rawLines = await ra(transcriptPath);
-
-  const events = rawLines
-    .map(l => { try { return JSON.parse(l); } catch { return null; } })
-    .filter(Boolean);
+  const events = await ra(transcriptPath);
 
   // Quick parse for signals
   const toolCallEvents = extractToolCalls(events);
